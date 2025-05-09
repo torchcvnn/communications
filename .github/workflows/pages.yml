@@ -13,6 +13,7 @@ jobs:
       contents: read
 
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11' 
@@ -27,14 +28,16 @@ jobs:
           cd $HOME/reveal_pandoc_slides; git submodule update --init --recursive ; 
           mkdir -p $HOME/.local/bin;
           ln -s $HOME/reveal_pandoc_slides/slidemaker/slidemake $HOME/.local/bin/slidemake
+
+
       - name: Slidemaker configuration
-        run: cd $HOME/reveal_pandoc_slides/example && slidemake config
+        run: cd 2025_ijcnn && slidemake config
       - name: Builds the slides
-        run: cd $HOME/reveal_pandoc_slides/example && slidemake make
+        run: cd 2025_ijcnn && slidemake make
       - name: Upload the generated slides
         uses: actions/upload-artifact@v4
         with:
-          path: /home/runner/reveal_pandoc_slides/example/build  # using $HOME does not seem to work
+          path: 2025_ijcnn/build  # using $HOME does not seem to work
           name: 2025ijcnn
 
 
@@ -46,7 +49,7 @@ jobs:
       - name: Prepare the site directory
         run: mkdir _site
 
-      - name: Download the Slides
+      - name: Download the Slides for IJCNN2025
         uses: actions/download-artifact@v4
         with:
           name: 2025ijcnn
