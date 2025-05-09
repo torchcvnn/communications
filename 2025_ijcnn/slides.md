@@ -219,17 +219,62 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 
 ## Problem
 
-- Reconstruction of PolSAR with complex valued auto-encoders
-- Full PolSF tile, non overlapping patches $64\times 64$
+- Reconstruction of PolSAR (Quad pol) with complex valued auto-encoders with physical properties preservation [@Gabot2024]
+- Full PolSF tile, non overlapping patches $64\times 64$, train($80\%$), valid ($20\%$)
 - Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
   downsampling
 - Decoder with ConvTranspose upsampling, concat and $2$ residual blocks
+- Trained with AdamW($\epsilon=0.0005$, $\lambda=0.0001$)
+
+::: {.w3-row}
+::: {.w3-half}
+
+```python
+from torchcvnn.datasets import ALOSDataset
+
+dataset = ALOSDataset(
+  root, transform, crop_coordinates, patch_size, patch_stride
+)
+
+```
+
+:::
+::: {.w3-half}
+
+![Complex valued Auto-encoder for PolSAR reconstruction](img/radar_ae.png){width=75%}
+
+:::
+:::
 
 Source code : [https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE](https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE)
 
 ## Performances
 
+::: {.w3-row}
+::: {.w3-half}
 
+![](./img/radar_pauli.png){width=75%}
+
+:::
+::: {.w3-half}
+
+![](./img/radar_krogager.png){width=75%}
+
+:::
+:::
+
+::: {.w3-row}
+::: {.w3-half}
+
+![](./img/radar_halpha.png){width=75%}
+
+:::
+::: {.w3-half}
+
+![](./img/radar_confusion.png){width=75%}
+
+:::
+:::
 
 # Use case : Semantic segmentation with CV-UNet
 
