@@ -75,6 +75,9 @@ dataset = SLCDataset(
 ::: 
 ::: 
 
+## Transforms
+
+FFTResize, LogTransform, FFT, IFFT, etc...
 
 ## Activation functions
 
@@ -216,9 +219,17 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 
 ## Problem
 
-blabla
+- Reconstruction of PolSAR with complex valued auto-encoders
+- Full PolSF tile, non overlapping patches $64\times 64$
+- Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
+  downsampling
+- Decoder with ConvTranspose upsampling, concat and $2$ residual blocks
 
-## Models
+Source code : [https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE](https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE)
+
+## Performances
+
+
 
 # Use case : Semantic segmentation with CV-UNet
 
@@ -264,6 +275,7 @@ Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_une
 - Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
   downsampling
 - Decoder with bilinear upsampling, concat and $2$ residual blocks
+- Shortcut connections between the encoder and decoder blocks
 
 ::: {.w3-row}
 ::: {.w3-third}
@@ -283,9 +295,50 @@ Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_une
 :::
 :::
 
-# Use case : Neural Implicit Representation for Cardiac reconstruction
+# Use case : Neural Implicit Representation (NIR) for Cardiac reconstruction
 
 ## Problem
+
+- In cardiac MRI, Fourier space is sampled by bands,
+- more time is more bands is better resolution
+- **Objective**:  reconstruct the image $\mathbf{I} \in \mathbb{C}^{N_x\times N_y}$ from the partially observed $k$-space $\mathbf{K} \in \mathbb{C}^{N_x\times N_y\times N_c}$ ($N_c$ coils)
+
+- From CINEJense [@Hemidi2023] based on Instand Neural Graphic Primitives [@mueller2022]. No training, only inference.
+- 2D+t input coordinates $(x, y, t)$ with real-valued multi-resolution hash encoding
+- $2$ INR networks : image $\mathbf{I}_\theta^t(x,y)$ and coil's sensitivity $\mathbf{S}_\psi^{t,c}(x,y)$.
+- INR = coordinates encoding + MLP (modReLU)
+
+::: {.w3-row}
+::: {.w3-half}
+
+![Architecture of CINEJense [@Hemidi2023]](https://raw.githubusercontent.com/MDL-UzL/CineJENSE/refs/heads/main/images/CineJense_arch.png)
+
+:::
+::: {.w3-half}
+
+![Sample k-space, image and mask](./img/nir_samples.png)
+
+:::
+:::
+
+Source code : [https://github.com/torchcvnn/examples/tree/main/nir_cinejense](https://github.com/torchcvnn/examples/tree/main/nir_cinejense)
+
+## Model and performances
+
+- Reconstruction loss with total variation regularizer
+$$
+\left(\hat{\theta}, \hat{\psi}\right)  =  \mbox{argmin}_{\theta, \psi} \frac{1}{N_cT}\sum_{\substack{c=0\\t=0}}^{\substack{T-1\\N_c-1}} L_\delta\left(\mathbf{M} \odot \mathcal{F}\left(\mathbf{I}_\theta^{t}\odot \mathbf{S}_\psi^{t,c}\right), \mathbf{K}^{t,c}\right) + \lambda \|\nabla \mathbf{I}_\theta^{t,c}\|_1\, ,
+    \label{eq:cinejense}
+$$
+
+- The reconstruction combines the prediction with the partially observed k-space
+  sampled arbitrarily over $X\times Y \times T$.
+
+- Examples with acceleration factor $4$ (top), and $10$ (bottom)
+
+![](https://raw.githubusercontent.com/torchcvnn/examples/main/nir_cinejense/gifs/acc4_sax_p002.gif){width=75%}
+
+![](https://raw.githubusercontent.com/torchcvnn/examples/refs/heads/main/nir_cinejense/gifs/acc10_sax_p107.gif){width=75%}
 
 # Conclusion
 
@@ -293,8 +346,8 @@ Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_une
 
 Two PhDs currently investigating :
 
-- Complex valued generative models - Quentin Gabot
-- Complex valued anomaly detection - Huy Nguyen
+- Complex valued generative models - Quentin Gabot, Poster 10
+- Complex valued anomaly detection - Huy Nguyen, Poster P11
 
 
 <!-- 
