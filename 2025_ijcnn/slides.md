@@ -75,6 +75,9 @@ dataset = SLCDataset(
 ::: 
 ::: 
 
+## Transforms
+
+FFTResize, LogTransform, FFT, IFFT, etc...
 
 ## Activation functions
 
@@ -216,9 +219,17 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 
 ## Problem
 
-blabla
+- Reconstruction of PolSAR with complex valued auto-encoders
+- Full PolSF tile, non overlapping patches $64\times 64$
+- Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
+  downsampling
+- Decoder with ConvTranspose upsampling, concat and $2$ residual blocks
 
-## Models
+Source code : [https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE](https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE)
+
+## Performances
+
+
 
 # Use case : Semantic segmentation with CV-UNet
 
@@ -264,6 +275,7 @@ Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_une
 - Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
   downsampling
 - Decoder with bilinear upsampling, concat and $2$ residual blocks
+- Shortcut connections between the encoder and decoder blocks
 
 ::: {.w3-row}
 ::: {.w3-third}
