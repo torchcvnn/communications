@@ -130,6 +130,19 @@ CGELU = torchcvnn.IndependentRealImag(nn.GELU)
 
 See [https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations](https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations)
 
+## Initialization functions
+
+Initialization is critical for successfull training of deep neural networks.
+
+$$
+\begin{eqnarray}
+\label{eq:uglorot} \text{Glorot Uniform : } &  \mathcal{U}\left[-\displaystyle\frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} + \text{fan}_{\text{out}}}}, \frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} + \text{fan}_{\text{out}}}}\right]\\
+\label{eq:nglorot} \text{Glorot Normal : } &  \mathcal{N}\left(0, \displaystyle\frac{1}{\sqrt{\text{fan}_{\text{in}}+ \text{fan}_{\text{out}}}}\right) \\
+\label{eq:uhe} \text{He Uniform} &  w \sim \mathcal{U}\left[-\displaystyle\frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} }}, \frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} }}\right]\\
+\label{eq:nhe} \text{He Normal} &  w \sim \mathcal{N}\left(0, \displaystyle\frac{1}{\sqrt{\text{fan}_{\text{in}} }}\right)
+\end{eqnarray}
+$$
+
 ## Pooling, dropout, normalization layers
 
 - [Dropout layers](https://torchcvnn.github.io/torchcvnn/modules/nn.html#dropout-layers) : Dropout, Dropout2d
@@ -160,10 +173,59 @@ running statistics.
 
 
 
-## Attention layers and transformers
+## Attention layers and transformers [1/2]
 
-- ViT : Vision transformers
+- Transformers [@Vaswani2017] introduced as an efficient FFNN for dealing with
+  sequences. Extended to vision VIT [@dosovitskiy2021an]
 
+- Fundamental component : Multi head attention module as scaled dot product : 
+
+$$
+\begin{equation*}
+Att(\boldsymbol{Q}, \boldsymbol{K}, \boldsymbol{V}) = \mathrm{softmax}\left(\frac{\boldsymbol{Q} \, \boldsymbol{K}^T}{\sqrt{d}}\right) \, \boldsymbol{V}\, .
+\end{equation*}
+$$
+
+- Extended to Complex by [@Eilers2023]
+
+$$
+\begin{equation*}
+\mathbb{C}Att(\boldsymbol{Q}, \boldsymbol{K}, \boldsymbol{V}) = \mathrm{softmax}\left(\frac{\mathrm{Re} \left(\boldsymbol{Q} \, \boldsymbol{K}^H\right)}{\sqrt{d}}\right) \, \boldsymbol{V}\, .
+\end{equation*}
+$$
+
+## Attention layers and transformers [2/2]
+
+- Scaled Complex Valued ViTs in torchcvnn:
+
+![](./img/scaled_vits.png)
+
+```python
+import torch.nn as nn
+import torchcvnn.nn as c_nn
+import torchcvnn.models as c_models
+
+patch_embedder = nn.Sequential(
+    c_nn.RMSNorm([cin, height, width]),
+    nn.Conv2d(
+        cin,
+        hidden_dim,
+        kernel_size=patch_size,
+        stride=patch_size,
+        dtype=torch.complex64,
+    ),
+    c_nn.RMSNorm([hidden_dim, height // patch_size, width // patch_size]),
+)
+
+vit_model = c_models.vit_b(patch_embedder)
+# X is a torch tensor of dtype complex64
+#                    and shape (B, C, H, W)
+out = vit_model(X) 
+# out is of dtype complex64
+# and shape 
+#   [B, hidden_dim, H//patch_size, W//patch_size]
+
+```
 
 # Use case : MSTAR classification with CV-CNNs and CV-ViTs
 
