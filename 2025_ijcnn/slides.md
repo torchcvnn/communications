@@ -77,7 +77,35 @@ dataset = SLCDataset(
 
 ## Transforms
 
-FFTResize, LogTransform, FFT, IFFT, etc...
+- Fourier `FFT`, Inverse Fourier `IFFT`
+
+- Resize transforms : `SpatialResize`, `FFTResize` (crop/pad the FFT)
+
+- `LogTransform` for converting the modulus to dB, keeping the phase
+
+- Conversion Real $\leftrightarrow$ Complex : `ToReal`, `ToImaginary`,
+  `RealImaginery` (split), `Amplitude`
+
+- Transforms can be composed, as usual with pytorch
+
+```python
+import torchvision.transforms.v2 as v2
+from torchcvnn.datasets import MSTARTargets
+from torchcvnn.transforms import HWC2CHW, LogAmplitude, ToTensor, FFTResize
+
+dataset = MSTARTargets(
+	datadir,
+	transform=v2.Compose(
+		[
+			HWC2CHW(),	
+			FFTResize((opt.input_size, opt.input_size)),
+			LogAmplitude(),	
+			ToTensor('complex64'),
+		]
+	),
+)
+```
+
 
 ## Activation functions
 
@@ -102,6 +130,19 @@ CGELU = torchcvnn.IndependentRealImag(nn.GELU)
 
 See [https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations](https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations)
 
+## Initialization functions
+
+Initialization is critical for successfull training of deep neural networks.
+
+$$
+\begin{eqnarray}
+\label{eq:uglorot} \text{Glorot Uniform : } &  \mathcal{U}\left[-\displaystyle\frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} + \text{fan}_{\text{out}}}}, \frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} + \text{fan}_{\text{out}}}}\right]\\
+\label{eq:nglorot} \text{Glorot Normal : } &  \mathcal{N}\left(0, \displaystyle\frac{1}{\sqrt{\text{fan}_{\text{in}}+ \text{fan}_{\text{out}}}}\right) \\
+\label{eq:uhe} \text{He Uniform} &  w \sim \mathcal{U}\left[-\displaystyle\frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} }}, \frac{\sqrt{3}}{\sqrt{\text{fan}_{\text{in}} }}\right]\\
+\label{eq:nhe} \text{He Normal} &  w \sim \mathcal{N}\left(0, \displaystyle\frac{1}{\sqrt{\text{fan}_{\text{in}} }}\right)
+\end{eqnarray}
+$$
+
 ## Pooling, dropout, normalization layers
 
 - [Dropout layers](https://torchcvnn.github.io/torchcvnn/modules/nn.html#dropout-layers) : Dropout, Dropout2d
@@ -109,12 +150,82 @@ See [https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations](https://
 - [UpSampling layers](https://torchcvnn.github.io/torchcvnn/modules/nn.html#upsampling-layers) : ConvTranspose2d, Upsample
 - [Normalization layers](https://torchcvnn.github.io/torchcvnn/modules/nn.html#normalization-layers) : BatchNorm{1d,2d}, LayerNorm, RMSNorm
 
---- TBD equations ---
+	- **Complex valued Bath Normalization** [@Trabelsi2018]
 
-## Attention layers and transformers
+	$$
+	\begin{eqnarray}
+	\nonumber \tilde{\mathbf{x}} &=& (\boldsymbol\Gamma\left(\mathbf{x})+\varepsilon\,\mathbf{I}\right)^{-\frac{1}{2}} \left(\mathbf{x} - \boldsymbol{\mu}(\mathbf{x})\right)\, ,\\
+	\hat{\mathbf{x}} &=& \boldsymbol{\Lambda} \, \tilde{\mathbf{x}} + \boldsymbol{\beta}\, ,
+	\end{eqnarray}
+	$$
 
-- ViT : Vision transformers
+	- **LayerNorm** [@Ba2016] : statistics computed on the inputs of a layer, no need for
+running statistics.
 
+	- **RMSNorm** [@Zhang2019] : LayerNorm without centering
+
+	$$
+	\begin{eqnarray}
+	\nonumber \tilde{\mathbf{x}} &=& (\boldsymbol\Gamma\left(\mathbf{x})+\varepsilon\,\mathbf{I}\right)^{-\frac{1}{2}} \mathbf{x} \, ,\\
+	\hat{\mathbf{x}} &=& \boldsymbol{\Lambda} \, \tilde{\mathbf{x}}\, ,
+	\end{eqnarray}
+	$$
+
+
+
+## Attention layers and transformers [1/2]
+
+- Transformers [@Vaswani2017] introduced as an efficient FFNN for dealing with
+  sequences. Extended to vision VIT [@dosovitskiy2021an]
+
+- Fundamental component : Multi head attention module as scaled dot product : 
+
+$$
+\begin{equation*}
+Att(\boldsymbol{Q}, \boldsymbol{K}, \boldsymbol{V}) = \mathrm{softmax}\left(\frac{\boldsymbol{Q} \, \boldsymbol{K}^T}{\sqrt{d}}\right) \, \boldsymbol{V}\, .
+\end{equation*}
+$$
+
+- Extended to Complex by [@Eilers2023]
+
+$$
+\begin{equation*}
+\mathbb{C}Att(\boldsymbol{Q}, \boldsymbol{K}, \boldsymbol{V}) = \mathrm{softmax}\left(\frac{\mathrm{Re} \left(\boldsymbol{Q} \, \boldsymbol{K}^H\right)}{\sqrt{d}}\right) \, \boldsymbol{V}\, .
+\end{equation*}
+$$
+
+## Attention layers and transformers [2/2]
+
+- Scaled Complex Valued ViTs in torchcvnn:
+
+![](./img/scaled_vits.png)
+
+```python
+import torch.nn as nn
+import torchcvnn.nn as c_nn
+import torchcvnn.models as c_models
+
+patch_embedder = nn.Sequential(
+    c_nn.RMSNorm([cin, height, width]),
+    nn.Conv2d(
+        cin,
+        hidden_dim,
+        kernel_size=patch_size,
+        stride=patch_size,
+        dtype=torch.complex64,
+    ),
+    c_nn.RMSNorm([hidden_dim, height // patch_size, width // patch_size]),
+)
+
+vit_model = c_models.vit_b(patch_embedder)
+# X is a torch tensor of dtype complex64
+#                    and shape (B, C, H, W)
+out = vit_model(X) 
+# out is of dtype complex64
+# and shape 
+#   [B, hidden_dim, H//patch_size, W//patch_size]
+
+```
 
 # Use case : MSTAR classification with CV-CNNs and CV-ViTs
 
@@ -219,17 +330,66 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 
 ## Problem
 
-- Reconstruction of PolSAR with complex valued auto-encoders
-- Full PolSF tile, non overlapping patches $64\times 64$
+- Reconstruction of PolSAR (Quad pol) with complex valued auto-encoders with physical properties preservation [@Gabot2024]
+- Full PolSF tile, non overlapping patches $64\times 64$, train($80\%$), valid ($20\%$)
 - Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
   downsampling
 - Decoder with ConvTranspose upsampling, concat and $2$ residual blocks
+- Trained with AdamW($\epsilon=0.0005$, $\lambda=0.0001$)
+
+::: {.w3-row}
+::: {.w3-half}
+
+```python
+from torchcvnn.datasets import ALOSDataset
+
+crop_coordinates = ((2832, 736), (7888, 3520))
+dataset = ALOSDataset(
+    vol_filepath,
+    patch_size=(512, 512),
+    patch_stride=(128, 128),
+    crop_coordinates=crop_coordinates,
+)
+
+```
+
+:::
+::: {.w3-half}
+
+![Complex valued Auto-encoder for PolSAR reconstruction](img/radar_ae.png){width=75%}
+
+:::
+:::
 
 Source code : [https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE](https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE)
 
 ## Performances
 
+::: {.w3-row}
+::: {.w3-half}
 
+![](./img/radar_pauli.png){width=75%}
+
+:::
+::: {.w3-half}
+
+![](./img/radar_krogager.png){width=75%}
+
+:::
+:::
+
+::: {.w3-row}
+::: {.w3-half}
+
+![](./img/radar_halpha.png){width=75%}
+
+:::
+::: {.w3-half}
+
+![](./img/radar_confusion.png){width=75%}
+
+:::
+:::
 
 # Use case : Semantic segmentation with CV-UNet
 
