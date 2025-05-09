@@ -109,7 +109,28 @@ See [https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations](https://
 - [UpSampling layers](https://torchcvnn.github.io/torchcvnn/modules/nn.html#upsampling-layers) : ConvTranspose2d, Upsample
 - [Normalization layers](https://torchcvnn.github.io/torchcvnn/modules/nn.html#normalization-layers) : BatchNorm{1d,2d}, LayerNorm, RMSNorm
 
---- TBD equations ---
+	- **Complex valued Bath Normalization** [@Trabelsi2018]
+
+	$$
+	\begin{eqnarray}
+	\nonumber \tilde{\mathbf{x}} &=& (\boldsymbol\Gamma\left(\mathbf{x})+\varepsilon\,\mathbf{I}\right)^{-\frac{1}{2}} \left(\mathbf{x} - \boldsymbol{\mu}(\mathbf{x})\right)\, ,\\
+	\hat{\mathbf{x}} &=& \boldsymbol{\Lambda} \, \tilde{\mathbf{x}} + \boldsymbol{\beta}\, ,
+	\end{eqnarray}
+	$$
+
+	- **LayerNorm** [@Ba2016] : statistics computed on the inputs of a layer, no need for
+running statistics.
+
+	- **RMSNorm** [@Zhang2019] : LayerNorm without centering
+
+	$$
+	\begin{eqnarray}
+	\nonumber \tilde{\mathbf{x}} &=& (\boldsymbol\Gamma\left(\mathbf{x})+\varepsilon\,\mathbf{I}\right)^{-\frac{1}{2}} \mathbf{x} \, ,\\
+	\hat{\mathbf{x}} &=& \boldsymbol{\Lambda} \, \tilde{\mathbf{x}}\, ,
+	\end{eqnarray}
+	$$
+
+
 
 ## Attention layers and transformers
 
@@ -232,8 +253,12 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 ```python
 from torchcvnn.datasets import ALOSDataset
 
+crop_coordinates = ((2832, 736), (7888, 3520))
 dataset = ALOSDataset(
-  root, transform, crop_coordinates, patch_size, patch_stride
+    vol_filepath,
+    patch_size=(512, 512),
+    patch_stride=(128, 128),
+    crop_coordinates=crop_coordinates,
 )
 
 ```
