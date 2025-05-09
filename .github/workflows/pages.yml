@@ -41,7 +41,7 @@ jobs:
   # Gather the generated artifacts for the github page
   artifacts:
     runs-on: ubuntu-latest
-    needs: [slides]
+    needs: [ijcnn2025]
     steps:
       - name: Prepare the site directory
         run: mkdir _site
