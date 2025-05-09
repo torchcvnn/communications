@@ -1,0 +1,79 @@
+name: slides
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+
+  2025ijcn:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' 
+      - name: Install dependencies
+        run: >
+          sudo apt install pandoc libgraphviz-dev graphviz;
+          sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra pdf2svg;
+          python3 -m pip install pygraphviz pandocfilters;
+      - name: Clone slidemaker
+        run: >
+          git clone --recursive https://github.com/jeremyfix/reveal_pandoc_slides.git $HOME/reveal_pandoc_slides;
+          cd $HOME/reveal_pandoc_slides; git submodule update --init --recursive ; 
+          mkdir -p $HOME/.local/bin;
+          ln -s $HOME/reveal_pandoc_slides/slidemaker/slidemake $HOME/.local/bin/slidemake
+      - name: Slidemaker configuration
+        run: cd $HOME/reveal_pandoc_slides/example && slidemake config
+      - name: Builds the slides
+        run: cd $HOME/reveal_pandoc_slides/example && slidemake make
+      - name: Upload the generated slides
+        uses: actions/upload-artifact@v4
+        with:
+          path: /home/runner/reveal_pandoc_slides/example/build  # using $HOME does not seem to work
+          name: 2025ijcnn
+
+
+  # Gather the generated artifacts for the github page
+  artifacts:
+    runs-on: ubuntu-latest
+    needs: [slides]
+    steps:
+      - name: Prepare the site directory
+        run: mkdir _site
+
+      - name: Download the Slides
+        uses: actions/download-artifact@v4
+        with:
+          name: 2025ijcnn
+          path: _site/2025ijcnn
+
+      - name: Upload github pages artifcats
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [artifacts]
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 
+
+    
+
