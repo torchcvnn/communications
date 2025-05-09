@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  2025ijcn:
+  ijcnn2025:
     runs-on: ubuntu-24.04
 
     permissions:
