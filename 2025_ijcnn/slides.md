@@ -16,6 +16,12 @@ Existing frameworks :
 - Tensorflow: [https://github.com/NEGU93/cvnn](https://github.com/NEGU93/cvnn) [@Barrachina2022]
 - Pytorch: [complexPyTorch](https://github.com/wavefrontshaping/complexPyTorch) [@Matthes2021], [cplxmodule](https://github.com/ivannz/cplxmodule) [@Nazarov2019], [pytorch-complex](https://github.com/Roger-luo/pytorch-complex) (archived since 2019)
 
+<!--
+
+- to explore complex valued neural networks
+- to provide a common implementation for benchmarking
+
+-->
 
 
 # Core components
@@ -111,9 +117,100 @@ See [https://torchcvnn.github.io/torchcvnn/modules/nn.html#activations](https://
 
 ## Problem
 
-## Model
+::: {.w3-row}
+::: {.w3-half}
 
-blabla
+- $\approx 14k$ images, $16$ classes, 
+- $80\%$ for training, $20\%$ for validation, AdamW($\epsilon=0.003$, $\lambda=0.05$)
+- image sizes $54\times 54 \rightarrow 193\times 193$  are FFT-resized
+- magnitudes converted to dB scale, phase unchanged
+
+:::
+::: {.w3-half}
+
+![MSTAR distribution per class](./img/mstar_stats.png)
+
+:::
+:::
+
+::: {.w3-row}
+::: {.w3-half}
+
+
+```python
+
+import torchcvnn
+from torchcvnn.datasets import MSTARTargets
+from torchcvnn.transforms import HWC2CHW, LogAmplitude, ToTensor, FFTResize
+
+size = 128
+
+transform = v2.Compose(
+    [HWC2CHW(), FFTResize((size, size)), 
+	 LogAmplitude(), ToTensor('complex64')]
+)
+
+dataset = MSTARTargets(
+    rootdir, transform=transform
+)
+X, y = dataset[0]
+
+
+```
+
+
+:::
+::: {.w3-half}
+
+![MSTAR samples (magnitude)](./img/mstar_samples.png){width=50%}
+
+:::
+:::
+
+Soure code : [https://github.com/torchcvnn/examples/tree/main/mstar_classification/](https://github.com/torchcvnn/examples/tree/main/mstar_classification/)
+
+## Models and performances
+
+::: {.w3-row}
+::: {.w3-half}
+
+- Pretrained real-valued resnet18 (e.g. timm) can be loaded and patched to complex
+
+```python
+
+complex_valued_model = convert_to_complex(resnet18())
+
+def convert_to_complex(module: nn.Module) -> nn.Module:
+    cdtype = torch.complex64
+    for name, child in module.named_children():
+        if isinstance(child, nn.Conv2d):
+            setattr(module, name, nn.Conv2d(..., dtype=cdtype))
+        elif isinstance(child, nn.ReLU):
+            setattr(module, name, c_nn.modReLU())
+        elif isinstance(child, nn.BatchNorm2d):
+            setattr(module, name, c_nn.BatchNorm2d(child.num_features))
+        ....
+        else:
+            convert_to_complex(child)
+```
+
+:::
+::: {.w3-half}
+
+![VIT architectures parameters](./img/vit_archis.png)
+
+![Performances on the validation fold](./img/mstar_perf.png)
+
+:::
+:::
+
+- Implement your own complex valued neural network, e.g. CV-VIT, see [mstar_classification/models.py:VisionTransformer](https://github.com/torchcvnn/examples/blob/9ba0042f9d7f0be911fe7fd26dc4b3479a85c0bd/mstar_classification/model.py#L291-L359)
+
+	- embedding with an optional ConvSTEM (Hybrid VIT), on patches $16\times 16$
+	- complex valued attention by [@Eilers2023]
+	- additional class token, on which the classification head is connected
+
+
 
 # Use case : PolSAR reconstruction with CV-AEs
 
@@ -127,6 +224,65 @@ blabla
 
 ## Problem
 
+- ALOS2 [Polarimetric San Francisco](https://ietr-lab.univ-rennes1.fr/polsarpro-bio/san-francisco/),
+- semantic segmentation with $6$ classes (+unlabel), $4000 \times 2000$
+- non overlapping split, train($70\%$), valid($15\%$), test($15\%$)
+- AdamW($\epsilon=0.001$, $\lambda=0.005$)
+
+::: {.w3-row}
+::: {.w3-half}
+
+```python
+import torchcvnn
+from torchcvnn.datasets import PolSFDataset
+
+def transform_patches(patches):
+    # We keep all the patches and get the spectrum
+    # from it
+    # If you wish, you could filter out some polarizations
+    # PolSF provides the four HH, HV, VH, VV
+    patches = [np.abs(patchi) for _, patchi in patches.items()]
+    return np.stack(patches)
+
+dataset = PolSFDataset(rootdir, patch_size=((512, 512)), patch_stride=((512, 512)), transform=transform_patches
+X, y = dataset[0]
+```
+
+:::
+::: {.w3-half}
+
+![PolSF sample](./img/polsf_samples.png)
+
+:::
+:::
+
+Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_unet](https://github.com/torchcvnn/examples/tree/main/polsf_unet)
+
+## Model and performances
+
+- Complex valued UNet with $5$ encoder and $5$ decoder blocks, $52$M params
+- Encoder with $2\times$ Conv-BatchNorm-modReLU residual blocks, kernel size $3$, StridedConv
+  downsampling
+- Decoder with bilinear upsampling, concat and $2$ residual blocks
+
+::: {.w3-row}
+::: {.w3-third}
+
+![Confusion matrix on the test fold](./img/polsf_confusion.png)
+
+:::
+::: {.w3-third}
+
+![Predicted segmentation mask](./img/polsf_pred.png)
+
+:::
+::: {.w3-third}
+
+![Ground truth labels](./img/polsf_gt.png)
+
+:::
+:::
+
 # Use case : Neural Implicit Representation for Cardiac reconstruction
 
 ## Problem
@@ -139,6 +295,16 @@ Two PhDs currently investigating :
 
 - Complex valued generative models - Quentin Gabot
 - Complex valued anomaly detection - Huy Nguyen
+
+
+<!-- 
+
+Two master students on :
+
+- Modeling spiking neural networks with complex valued neural networks
+- Self supervized pre-training
+
+-->
 
 More models, more datasets, more approaches
 
