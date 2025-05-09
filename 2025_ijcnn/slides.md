@@ -77,7 +77,35 @@ dataset = SLCDataset(
 
 ## Transforms
 
-FFTResize, LogTransform, FFT, IFFT, etc...
+- Fourier `FFT`, Inverse Fourier `IFFT`
+
+- Resize transforms : `SpatialResize`, `FFTResize` (crop/pad the FFT)
+
+- `LogTransform` for converting the modulus to dB, keeping the phase
+
+- Conversion Real $\leftrightarrow$ Complex : `ToReal`, `ToImaginary`,
+  `RealImaginery` (split), `Amplitude`
+
+- Transforms can be composed, as usual with pytorch
+
+```python
+import torchvision.transforms.v2 as v2
+from torchcvnn.datasets import MSTARTargets
+from torchcvnn.transforms import HWC2CHW, LogAmplitude, ToTensor, FFTResize
+
+dataset = MSTARTargets(
+	datadir,
+	transform=v2.Compose(
+		[
+			HWC2CHW(),	
+			FFTResize((opt.input_size, opt.input_size)),
+			LogAmplitude(),	
+			ToTensor('complex64'),
+		]
+	),
+)
+```
+
 
 ## Activation functions
 
