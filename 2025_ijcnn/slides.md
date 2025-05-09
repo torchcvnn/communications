@@ -293,8 +293,8 @@ Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_une
 
 Two PhDs currently investigating :
 
-- Complex valued generative models - Quentin Gabot
-- Complex valued anomaly detection - Huy Nguyen
+- Complex valued generative models - Quentin Gabot, Poster 10
+- Complex valued anomaly detection - Huy Nguyen, Poster P11
 
 
 <!-- 
