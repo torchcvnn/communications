@@ -2,7 +2,7 @@
 
 ## What is the point ?
 
-Several domains involve complex valued data: remote sensing [@Barrachina2022], MRI [@Virtue2019],[@Solomon2024],[@Hemidi2023], optics [@Dinsdale2021].
+Several domains involve complex valued data: **remote sensing** [@Barrachina2022], **MRI** [@Virtue2019],[@Solomon2024],[@Hemidi2023], **optics** [@Dinsdale2021], **computational neuroscience** [@Reichert2014]
 
 Pytorch already implements complex valued gradient descent ([Wirtinger Calculus](https://pytorch.org/docs/stable/notes/autograd.html#autograd-for-complex-numbers)) but lacks several complex valued capabilities such as **datasets**, **cv-activations**, **layers**, **initialization functions**
 
