@@ -427,7 +427,7 @@ X, y = dataset[0]
 :::
 :::
 
-Source code : [https://https://github.com/torchcvnn/examples/tree/main/polsf_unet](https://github.com/torchcvnn/examples/tree/main/polsf_unet)
+Source code : [https://github.com/torchcvnn/examples/tree/main/polsf_unet](https://github.com/torchcvnn/examples/tree/main/polsf_unet)
 
 ## Model and performances
 
