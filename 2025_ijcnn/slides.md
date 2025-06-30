@@ -1,3 +1,19 @@
+---
+title: "torchcvnn: A PyTorch-based library to easily experiment with state-of-the-art Complex-Valued Neural Networks"
+author: Jeremy Fix, Quentin Gabot, X. Huy Nguyen, Joana Frontera-Pons, Chengfang Ren and Jean-Philippe Ovarlez
+institute: "CentraleSupelec"
+format:
+  revealjs:
+    chalkboard: true
+    fontsize: 22px
+    controls: true
+    logo: img/logo.png
+    theme: [default, custom.scss]
+    footer: Produced with [quarto](https://github.com/quarto-dev/quarto-cli)
+bibliography: biblio.bib
+highlight-style: pygments
+---
+
 # Introduction
 
 ## What is the point ?
@@ -28,8 +44,8 @@ Existing frameworks :
 
 ## Datasets
 
-::: {.w3-row}
-::: {.w3-twothird}
+:::: {.columns}
+:::: {.column width="70%"}
 
 Available [datasets](https://torchcvnn.github.io/torchcvnn/modules/datasets.html) :
 
@@ -41,7 +57,6 @@ Available [datasets](https://torchcvnn.github.io/torchcvnn/modules/datasets.html
 See [https://torchcvnn.github.io/torchcvnn/modules/datasets.html](https://torchcvnn.github.io/torchcvnn/modules/datasets.html)
 
 ```python
-import numpy as np
 import torchcvnn
 from torchcvnn.datasets.slc.dataset import SLCDataset
 
@@ -68,7 +83,7 @@ dataset = SLCDataset(
 ```
 
 ::: 
-::: {.w3-third}
+:::: {.column width="30%"}
 
 ![](./img/datasets.png)
 
@@ -116,12 +131,9 @@ Activation functions can be of different types :
   CReLU, CPReLU, CTanh, ... `IndependentRealImag`
 
 ```python
-
 from torchcvnn.nn import IndependentRealImag
 
-
 CGELU = torchcvnn.IndependentRealImag(nn.GELU)
-
 ```
 
 
@@ -196,9 +208,12 @@ $$
 
 ## Attention layers and transformers [2/2]
 
-- Scaled Complex Valued ViTs in torchcvnn:
+- Scaled Complex Valued ViTs in torchcvnn:<br/>
+
 
 ![](./img/scaled_vits.png)
+
+
 
 ```python
 import torch.nn as nn
@@ -231,8 +246,8 @@ out = vit_model(X)
 
 ## Problem
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="50%"}
 
 - $\approx 14k$ images, $16$ classes, 
 - $80\%$ for training, $20\%$ for validation, AdamW($\epsilon=0.003$, $\lambda=0.05$)
@@ -240,19 +255,18 @@ out = vit_model(X)
 - magnitudes converted to dB scale, phase unchanged
 
 :::
-::: {.w3-half}
+:::: {.column width="50%"}
 
 ![MSTAR distribution per class](./img/mstar_stats.png)
 
 :::
 :::
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="50%"}
 
 
 ```python
-
 import torchcvnn
 from torchcvnn.datasets import MSTARTargets
 from torchcvnn.transforms import HWC2CHW, LogAmplitude, ToTensor, FFTResize
@@ -274,7 +288,7 @@ X, y = dataset[0]
 
 
 :::
-::: {.w3-half}
+:::: {.column width="50%"}
 
 ![MSTAR samples (magnitude)](./img/mstar_samples.png){width=50%}
 
@@ -285,13 +299,12 @@ Soure code : [https://github.com/torchcvnn/examples/tree/main/mstar_classificati
 
 ## Models and performances
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="50%"}
 
 - Pretrained real-valued resnet18 (e.g. timm) can be loaded and patched to complex
 
 ```python
-
 complex_valued_model = convert_to_complex(resnet18())
 
 def convert_to_complex(module: nn.Module) -> nn.Module:
@@ -309,7 +322,7 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 ```
 
 :::
-::: {.w3-half}
+:::: {.column width="50%"}
 
 ![VIT architectures parameters](./img/vit_archis.png)
 
@@ -337,8 +350,8 @@ def convert_to_complex(module: nn.Module) -> nn.Module:
 - Decoder with ConvTranspose upsampling, concat and $2$ residual blocks
 - Trained with AdamW($\epsilon=0.0005$, $\lambda=0.0001$)
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="50%"}
 
 ```python
 from torchcvnn.datasets import ALOSDataset
@@ -354,7 +367,7 @@ dataset = ALOSDataset(
 ```
 
 :::
-::: {.w3-half}
+:::: {.column width="50%"}
 
 ![Complex valued Auto-encoder for PolSAR reconstruction](img/radar_ae.png){width=75%}
 
@@ -363,30 +376,32 @@ dataset = ALOSDataset(
 
 Source code : [https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE](https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE)
 
-## Performances
+## Performances [1/2]
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="50%"}
 
-![](./img/radar_pauli.png){width=75%}
-
-:::
-::: {.w3-half}
-
-![](./img/radar_krogager.png){width=75%}
+![](./img/radar_pauli.png){width=100%}
 
 :::
-:::
+:::: {.column width="50%"}
 
-::: {.w3-row}
-::: {.w3-half}
-
-![](./img/radar_halpha.png){width=75%}
+![](./img/radar_krogager.png){width=100%}
 
 :::
-::: {.w3-half}
+:::
 
-![](./img/radar_confusion.png){width=75%}
+## Performances [2/2]
+
+:::: {.columns}
+:::: {.column width="50%"}
+
+![](./img/radar_halpha.png){width=100%}
+
+:::
+:::: {.column width="50%"}
+
+![](./img/radar_confusion.png){width=100%}
 
 :::
 :::
@@ -400,8 +415,8 @@ Source code : [https://github.com/QuentinGABOT/Reconstruction-PolSAR-Complex-AE]
 - non overlapping split, train($70\%$), valid($15\%$), test($15\%$)
 - AdamW($\epsilon=0.001$, $\lambda=0.005$)
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="50%"}
 
 ```python
 import torchcvnn
@@ -420,7 +435,7 @@ X, y = dataset[0]
 ```
 
 :::
-::: {.w3-half}
+:::: {.column width="50%"}
 
 ![PolSF sample](./img/polsf_samples.png)
 
@@ -437,18 +452,18 @@ Source code : [https://github.com/torchcvnn/examples/tree/main/polsf_unet](https
 - Decoder with bilinear upsampling, concat and $2$ residual blocks
 - Shortcut connections between the encoder and decoder blocks
 
-::: {.w3-row}
-::: {.w3-third}
+:::: {.columns}
+:::: {.column width="40%"}
 
 ![Confusion matrix on the test fold](./img/polsf_confusion.png)
 
 :::
-::: {.w3-third}
+:::: {.column width="20%"}
 
 ![Predicted segmentation mask](./img/polsf_pred.png)
 
 :::
-::: {.w3-third}
+:::: {.column width="19%"}
 
 ![Ground truth labels](./img/polsf_gt.png)
 
@@ -468,13 +483,13 @@ Source code : [https://github.com/torchcvnn/examples/tree/main/polsf_unet](https
 - $2$ INR networks : image $\mathbf{I}_\theta^t(x,y)$ and coil's sensitivity $\mathbf{S}_\psi^{t,c}(x,y)$.
 - INR = coordinates encoding + MLP (modReLU)
 
-::: {.w3-row}
-::: {.w3-half}
+:::: {.columns}
+:::: {.column width="45%"}
 
 ![Architecture of CINEJense [@Hemidi2023]](https://raw.githubusercontent.com/MDL-UzL/CineJENSE/refs/heads/main/images/CineJense_arch.png)
 
 :::
-::: {.w3-half}
+:::: {.column width="45%"}
 
 ![Sample k-space, image and mask](./img/nir_samples.png)
 
@@ -496,9 +511,9 @@ $$
 
 - Examples with acceleration factor $4$ (top), and $10$ (bottom)
 
-![](https://raw.githubusercontent.com/torchcvnn/examples/main/nir_cinejense/gifs/acc4_sax_p002.gif){width=75%}
+![](https://raw.githubusercontent.com/torchcvnn/examples/main/nir_cinejense/gifs/acc4_sax_p002.gif){width=70%}
 
-![](https://raw.githubusercontent.com/torchcvnn/examples/refs/heads/main/nir_cinejense/gifs/acc10_sax_p107.gif){width=75%}
+![](https://raw.githubusercontent.com/torchcvnn/examples/refs/heads/main/nir_cinejense/gifs/acc10_sax_p107.gif){width=70%}
 
 # Conclusion
 
@@ -506,8 +521,8 @@ $$
 
 Two PhDs currently investigating :
 
-- Complex valued generative models - Quentin Gabot, Poster 10
-- Complex valued anomaly detection - Huy Nguyen, Poster P11
+- Complex valued generative models - Quentin Gabot, 
+- Complex valued anomaly detection - Huy Nguyen, 
 
 
 <!-- 
@@ -537,8 +552,6 @@ Thank you for your attention.
 - Unit tests with pytest.
 
 Join us in this effort, your contributions are welcome.
-
-To be presented at [IJCNN 2025 (Roma) : Complex- and Hypercomplex- valued Neural Networks](https://www.ime.unicamp.br/~valle/CFPs/ijcnn2025)
 
 __Contact__: jeremy.fix@centralesupelec.fr
 

@@ -7,39 +7,34 @@ on:
 jobs:
 
   ijcnn2025:
-    runs-on: ubuntu-24.04
+    runs-on: python:3
 
     permissions:
       contents: read
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11' 
+
       - name: Install dependencies
         run: >
-          sudo apt install pandoc libgraphviz-dev graphviz;
-          sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra pdf2svg;
-          python3 -m pip install pygraphviz pandocfilters;
-      - name: Clone slidemaker
-        run: >
-          git clone --recursive https://github.com/jeremyfix/reveal_pandoc_slides.git $HOME/reveal_pandoc_slides;
-          cd $HOME/reveal_pandoc_slides; git submodule update --init --recursive ; 
-          mkdir -p $HOME/.local/bin;
-          ln -s $HOME/reveal_pandoc_slides/slidemaker/slidemake $HOME/.local/bin/slidemake
-
-
-      - name: Slidemaker configuration
-        run: cd 2025_ijcnn && slidemake config
+          sudo apt update && sudo apt install wget git zip;
+          python -m pip install -U pip
+      - name: Install quarto
+        run: > 
+          wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.7.32/quarto-1.7.32-linux-amd64.deb -O quarto.deb;
+          sudo dpkg -i quarto.deb ;
+          sudo apt install -y librsvg2-bin;
+          python -m pip install PyYAML jupyter
+      - name: Install our quarto additional dependencies
+        run: > 
+          python -m pip install numpy matplotlib
       - name: Builds the slides
-        run: cd 2025_ijcnn && slidemake make
+        run: quarto render 2025_ijcnn/slides.md --output-dir 2025_ijcnn/build/
       - name: Upload the generated slides
         uses: actions/upload-artifact@v4
         with:
           path: 2025_ijcnn/build  # using $HOME does not seem to work
           name: 2025ijcnn
-
 
   # Gather the generated artifacts for the github page
   artifacts:
