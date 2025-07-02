@@ -546,6 +546,11 @@ More models, more datasets, more approaches
 Thank you for your attention.
 
 - Library available on [https://github.com/torchcvnn](https://github.com/torchcvnn),
+
+>	```
+>	pip install torchcvnn
+>	```
+
 - Examples available on [https://github.com/torchcvnn/examples](https://github.com/torchcvnn/examples),
 - Documentation on [https://torchcvnn.github.io/torchcvnn/](https://torchcvnn.github.io/torchcvnn/),
 - Code coverage on [https://torchcvnn.github.io/torchcvnn/htmlcov/](https://torchcvnn.github.io/torchcvnn/htmlcov/),
