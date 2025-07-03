@@ -8,7 +8,8 @@ format:
     fontsize: 22px
     controls: true
     logo: img/logo.png
-    theme: [default, custom.scss]
+    theme: [default]
+    css: custom.css
     footer: Produced with [quarto](https://github.com/quarto-dev/quarto-cli)
 bibliography: biblio.bib
 highlight-style: pygments
@@ -290,7 +291,7 @@ X, y = dataset[0]
 :::
 :::: {.column width="50%"}
 
-![MSTAR samples (magnitude)](./img/mstar_samples.png){width=50%}
+![MSTAR samples (magnitude)](./img/mstar_samples.png){width=45%}
 
 :::
 :::
@@ -511,9 +512,9 @@ $$
 
 - Examples with acceleration factor $4$ (top), and $10$ (bottom)
 
-![](https://raw.githubusercontent.com/torchcvnn/examples/main/nir_cinejense/gifs/acc4_sax_p002.gif){width=70%}
+![](https://raw.githubusercontent.com/torchcvnn/examples/main/nir_cinejense/gifs/acc4_sax_p002.gif){width=60%}
 
-![](https://raw.githubusercontent.com/torchcvnn/examples/refs/heads/main/nir_cinejense/gifs/acc10_sax_p107.gif){width=70%}
+![](https://raw.githubusercontent.com/torchcvnn/examples/refs/heads/main/nir_cinejense/gifs/acc10_sax_p107.gif){width=60%}
 
 # Conclusion
 
